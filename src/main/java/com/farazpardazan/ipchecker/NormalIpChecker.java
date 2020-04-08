@@ -22,12 +22,12 @@ public class NormalIpChecker implements IpChecker {
 
 
     private DataMiner dataMiner;
+    private String[][] Data;
 
-    public NormalIpChecker(@Autowired DataMiner dataMiner) throws IOException {
+    @Autowired
+    public NormalIpChecker(DataMiner dataMiner) throws IOException {
         this.dataMiner = dataMiner;
     }
-
-    private String[][] Data = dataMiner.ArrayFiller();
 
     public long ipToLong(String ipAddress) {
 
@@ -46,6 +46,8 @@ public class NormalIpChecker implements IpChecker {
 
     @Override
     public boolean hasAccess(String clientIP) throws IOException, AddressStringException {
+        this.Data = this.dataMiner.ArrayFiller();
+
         for(String[] i : Data)
         {
             IPAddress lower = new IPAddressString(i[0]).toAddress();

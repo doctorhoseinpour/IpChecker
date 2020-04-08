@@ -13,8 +13,7 @@ public class IpcheckerApplication {
 
     public static void main(String[] args) throws IOException, AddressStringException {
         ApplicationContext context= SpringApplication.run(IpcheckerApplication.class, args);
-        NormalIpChecker ipChecker = context.getBean(NormalIpChecker.class);
-
+        Tree ipChecker = context.getBean(Tree.class);
         Scanner scanner = new Scanner(System.in);
         String ClientIp = scanner.nextLine();
         System.out.println(ipChecker.hasAccess(ClientIp));

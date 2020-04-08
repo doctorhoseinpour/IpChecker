@@ -5,80 +5,41 @@ import inet.ipaddr.IPAddressSeqRange;
 import inet.ipaddr.IPAddressString;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import java.io.*;
+import org.springframework.stereotype.Component;
 
+import java.io.*;
+@Component
 @Getter
 @Setter
 public class BinaryIpChecker implements IpChecker {
-    public BinaryIpChecker() throws FileNotFoundException {
+
+    private DataMiner dataMiner;
+    private String[][] Data;
+
+    @Autowired
+    public BinaryIpChecker(DataMiner dataMiner) throws IOException {
+        this.dataMiner = dataMiner;
     }
-    @Value("${FILENAME}")
-    static String FILENAME;
-    static BufferedReader csvReader;
-
-    static {
-        try {
-            csvReader = new BufferedReader(new FileReader(FILENAME));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static int GetFileSize() throws IOException {
-        String row;
-        int count = 0;
-        while((row = csvReader.readLine()) != null) {
-            count++;
-        }
-        csvReader.close();
-        return count;
-    }
-
-    static int FileSize;
-
-    static {
-        try {
-            FileSize = GetFileSize();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static String[][] data = new String[FileSize][2];
-
-    public void PreProcess() throws IOException {
-        String row;
-        int i = 0;
-        while((row = csvReader.readLine()) != null) {
-            String[] Line = row.split(",");
-            data[i][0] = Line[0];
-            data[i][1] = Line[1];
-            i++;
-        }
-        csvReader.close();
-    }
-
 
     public long ipToLong(String ipAddress) {
 
-        String[] ipAddressInArray = ipAddress.split(".");
-        long result = 0;
-        for (int i = 0; i < ipAddressInArray.length; i++) {
-
-            int power = 3 - i;
-            int ip = Integer.parseInt(ipAddressInArray[i]);
-            result += ip * Math.pow(256, power);
-
+        String[] octets = ipAddress.split("\\.");
+        long ip = 0;
+        for (int i = 3; i >= 0; i--) {
+            long octet = Long.parseLong(octets[3 - i]);
+            ip |= octet << (i * 8);
         }
-        return result;
+        return ip;
     }
 
 
     @Override
     public boolean hasAccess(String clientIP) throws IOException, AddressStringException{
+        this.Data = this.dataMiner.ArrayFiller();
         int low = 0;
-        int high = GetFileSize();
+        int high = this.Data.length;
         int mid = (high + low)/2;
         while (true)
         {
@@ -87,24 +48,20 @@ public class BinaryIpChecker implements IpChecker {
                 break;
             }
             mid = low + (( high - low ) / 2);
-            if(ipToLong(data[mid][0]) > ipToLong(clientIP))
+            if(ipToLong(Data[mid][0]) > ipToLong(clientIP))
             {
                 high = mid - 1;
             }
-            if(ipToLong(data[mid][0]) < ipToLong(clientIP))
+            if(ipToLong(Data[mid][0]) < ipToLong(clientIP))
             {
                 low = mid + 1;
             }
-            if(ipToLong(data[mid][0]) == ipToLong(clientIP))
+            if(ipToLong(Data[mid][0]) == ipToLong(clientIP))
             {
                 break;
             }
         }
-        IPAddress lower = new IPAddressString(data[mid][0]).toAddress();
-        IPAddress upper = new IPAddressString(data[mid][1]).toAddress();
-        IPAddress addr = new IPAddressString(clientIP).toAddress();
-        IPAddressSeqRange range = lower.toSequentialRange(upper);
-        if(range.contains(addr))
+        if(ipToLong(clientIP) >= ipToLong(Data[mid][0]) && ipToLong(clientIP) <= ipToLong(Data[mid][1]))
         {
             return true;
         }
