@@ -5,7 +5,10 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 @Component
 @Getter
@@ -14,17 +17,33 @@ public class TreeMaker {
 
     private String[][] Data;
 
-    private Node[] Roots;
-
+    public int[][] First = new int[256][256];
+    public int[][] Second = new int[256][256];
+    public int[][] Third = new int[256][256];
     private DataMiner dataMiner;
     @Autowired
     public TreeMaker(DataMiner dataMiner) throws IOException {
         this.dataMiner = dataMiner;
-    }
 
-    public Node[] Insert() throws IOException {
+    }
+    @PostConstruct
+    public void Insert() throws IOException {
         this.Data = this.dataMiner.ArrayFiller();
-        this.Roots = new Node[256];
+
+        for(int[] row : First)
+        {
+            Arrays.fill(row , -1);
+        }
+
+        for(int[] row : Second)
+        {
+            Arrays.fill(row , -1);
+        }
+        for(int[] row : Third)
+        {
+            Arrays.fill(row , -1);
+        }
+
         for(int i = 0 ; i < this.Data.length ; i++)
         {
             String[] Lower = Data[i][0].split("\\.");
@@ -39,21 +58,19 @@ public class TreeMaker {
             int upper3 = Integer.parseInt(Upper[3]);
             for(int j = lower0 ; j<= upper0 ;j++)
             {
-                Roots[j].Value = j;
                 for(int k = lower1 ; k<= upper1 ;k++)
                 {
-                    Roots[j].Children[k].Value = k;
+                    First[j][k] = k;
                     for(int l = lower2 ; l<= upper2 ;l++)
                     {
-                        Roots[j].Children[k].Children[l].Value = l;
+                        Second[k][l] = l;
                         for(int m = lower3 ; m<= upper3 ;m++)
                         {
-                            Roots[j].Children[k].Children[l].Children[m].Value = m;
+                            Third[l][m] = m;
                         }
                     }
                 }
             }
         }
-        return Roots;
     }
 }

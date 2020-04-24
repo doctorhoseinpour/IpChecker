@@ -19,8 +19,9 @@ public class Tree implements IpChecker{
 
     private TreeMaker treeMaker;
     private String[][] Data;
-    private Node[] Roots;
-
+    public int[][] First = new int[256][256];
+    public int[][] Second = new int[256][256];
+    public int[][] Third = new int[256][256];
     @Autowired
     public Tree(TreeMaker treeMaker) throws IOException {
         this.treeMaker = treeMaker;
@@ -28,33 +29,19 @@ public class Tree implements IpChecker{
 
     @Override
     public boolean hasAccess(String clientIP) throws IOException, AddressStringException {
-
-        this.Roots = this.treeMaker.Insert();
-        String[] IPSplit = clientIP.split(".");
-        int clientIP0 = Integer.parseInt(IPSplit[0]);
-        int clientIP1 = Integer.parseInt(IPSplit[1]);
-        int clientIP2 = Integer.parseInt(IPSplit[2]);
-        int clientIP3 = Integer.parseInt(IPSplit[3]);
-        boolean flag1=false , flag2=false , flag3= false , flag4 = false;
-        if(Roots[clientIP0].Value == clientIP0)
+        this.First = this.treeMaker.First;
+        this.Second = this.treeMaker.Second;
+        this.Third = this.treeMaker.Third;
+        String[] IpSplit = clientIP.split("\\.");
+        if(this.First[Integer.parseInt(IpSplit[0])][Integer.parseInt(IpSplit[1])] == Integer.parseInt(IpSplit[1]))
         {
-            flag1 = true;
-        }
-        if(Roots[clientIP0].Children[clientIP1].Value == clientIP1)
-        {
-            flag2 = true;
-        }
-        if(Roots[clientIP0].Children[clientIP1].Children[clientIP2].Value == clientIP2)
-        {
-            flag3 = true;
-        }
-        if(Roots[clientIP0].Children[clientIP1].Children[clientIP2].Children[clientIP3].Value == clientIP3)
-        {
-            flag4 = true;
-        }
-        if(flag1 && flag2 && flag3 && flag4)
-        {
-            return true;
+            if(this.Second[Integer.parseInt(IpSplit[1])][Integer.parseInt(IpSplit[2])] == Integer.parseInt(IpSplit[2]))
+            {
+                if(this.Third[Integer.parseInt(IpSplit[2])][Integer.parseInt(IpSplit[3])] == Integer.parseInt(IpSplit[3]))
+                {
+                    return true;
+                }
+            }
         }
         return false;
     }
